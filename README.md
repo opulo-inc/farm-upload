@@ -8,17 +8,17 @@ The application is a very lightweight wrapper around Python's `ftplib` module, a
 
 ## Installation
 
-### Mac DMG
+### Mac .app
 
-There is currently only a Mac DMG pre-built for this application. Just download the .dmg file from the latest release and run as an application.
+There is currently only a Mac .app pre-built for this application. Just download the .app file from the latest release and run as an application.
 
 ### From Source
 
 Make sure you have Python 3 installed:
 
 ```python
-    python3 --version
-    > Python 3.9.19
+python3 --version
+> Python 3.9.19
 ```
 
 If not, [download and install it](https://www.python.org/downloads/).
@@ -26,7 +26,7 @@ If not, [download and install it](https://www.python.org/downloads/).
 Clone the repo to your computer:
 
 ```bash
-    git clone https://github.com/opulo-inc/farm-upload.git
+git clone https://github.com/opulo-inc/farm-upload.git
 ```
 
 Inside the new `farm-upload` folder, you'll find a `settings-example.json` file. Duplicate it and rename it `settings.json`.
@@ -38,7 +38,7 @@ Open settings.json in a text editor. Update the IP addresses and passwords to ma
 To run the application, from the `farm-upload` folder, do:
 
 ```bash
-    python3 src/FarmUpload.py
+python3 src/FarmUpload.py
 ```
 
 ## Usage
