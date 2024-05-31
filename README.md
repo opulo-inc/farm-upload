@@ -16,14 +16,18 @@ There is currently only a Mac DMG pre-built for this application. Just download 
 
 Make sure you have Python 3 installed:
 
-    `$ python3 --version`
-    `> Python 3.9.19`
+```python
+    python3 --version
+    > Python 3.9.19
+```
 
 If not, [download and install it](https://www.python.org/downloads/).
 
 Clone the repo to your computer:
 
-    `$ git clone https://github.com/opulo-inc/farm-upload.git`
+```bash
+    git clone https://github.com/opulo-inc/farm-upload.git
+```
 
 Inside the new `farm-upload` folder, you'll find a `settings-example.json` file. Duplicate it and rename it `settings.json`.
 
@@ -33,7 +37,9 @@ Open settings.json in a text editor. Update the IP addresses and passwords to ma
 
 To run the application, from the `farm-upload` folder, do:
 
-    `python3 src/FarmUpload.py`
+```bash
+    python3 src/FarmUpload.py
+```
 
 ## Usage
 
