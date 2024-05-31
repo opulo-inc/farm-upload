@@ -70,52 +70,66 @@ class App():
         self.v.config(text=self.fileDirectory)
         self.v.update_idletasks()
 
-    def connect(self):
-        for i in self.settings["printers"]:
-            try:
-                ftp = BambuFTP()
-                ftp.set_pasv(True)
-                ftp.connect(host=i["ip"], port=990, timeout=10, source_address=None)
-                ftp.login('bblp', i["pw"])
-                ftp.prot_p()
-                self.printers.append([i["name"], ftp])
-                self.updateLog("Connected to " + i["name"])
-            except:
-                self.updateLog("Was unable to connect to " + i["name"])
+    def connect(self, printerJSON):
+        try:
+            ftp = BambuFTP()
+            ftp.set_debuglevel(2)
+            ftp.set_pasv(True)
+            ftp.connect(host=printerJSON["ip"], port=990, timeout=10, source_address=None)
+            ftp.login('bblp', printerJSON["pw"])
+            ftp.prot_p()
+            self.printers.append([printerJSON["name"], ftp])
+            self.updateLog("Connected to " + printerJSON["name"])
+            return ftp
+        except:
+            self.updateLog("Was unable to connect to " + printerJSON["name"])
+            return None
 
-    def disconnect(self):
-        for i in self.printers:
-            try:
-                i[1].quit()
-            except:
-                self.updateLog("Was unable to disconnect from " + i[0])
+    def disconnect(self, ftp, name):
+        try:
+            ftp.quit()
+            self.updateLog("Disconnected from " + str(name))
+        except:
+            self.updateLog("Was unable to disconnect from " + str(name))
 
     def send(self):
 
         self.wipeLog()
 
-        self.connect()
-
         toSend = os.listdir(self.fileDirectory)
 
         self.updateLog("Files to be sent: " + str(toSend))
         
-        for printer in self.printers:
-            for filename in toSend:
-                try:
-                    with open(os.path.join(self.fileDirectory,filename), 'rb') as file:  #Here I open the file using it's  full path
-                        self.updateLog("Sending " + str(filename) + " to printer " + printer[0] + "..." )
-                        printer[1].storlines(f'STOR {filename}', file)
-                        self.updateLog("Success")
+        for printer in self.settings["printers"]:
 
-                except:
-                    self.updateLog("Failure")
+            ftp = self.connect(printer)
+            
+            if ftp is not None:
 
-        self.disconnect()
+                for filename in toSend:
+                    try:
+                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                            self.updateLog("Sending " + str(filename) + " to printer " + printer["name"] + "..." )
+                            ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                            self.updateLog("Success")
+
+                    except:
+                        try:
+                            with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                                self.updateLog("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
+                                ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                                self.updateLog("Success")
+                        except:
+                            self.updateLog("Failure")
+
+                self.disconnect(ftp, printer["name"])
 
         self.updateLog("Process Complete.")
 
-        
+
+    def update(self, block):
+        print(str(block))
+
 
 if __name__ == "__main__":
     app = App()
