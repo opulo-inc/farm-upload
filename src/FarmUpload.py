@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import filedialog, Scrollbar
+from tkinter import filedialog
+import tkinter.scrolledtext as st 
 import json, os
 
 from Printer import Printer
-from Log import Log
+from Log import Logger
 
 class App():
     def __init__(self):
@@ -14,7 +15,7 @@ class App():
         self.ui = tk.Tk()
         self.loadUI()
 
-        self.log = Log(self.logUI, self.logStringVar)
+        self.log = Logger(self.logUI)
 
         self.ui.mainloop()
 
@@ -38,13 +39,14 @@ class App():
             ))
 
             checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
-            checkbox.pack(pady=10)
+            checkbox.pack(side=tk.LEFT, pady=10)
 
         self.s.update_idletasks()
 
     def loadUI(self):
         
         self.ui.title("Print Farm Bulk Uploader")
+        
         w = tk.Label(self.ui, text='Select the printers to send to:')
         w.pack()
 
@@ -69,11 +71,11 @@ class App():
         send_button = tk.Button(self.ui, text="Send to Farm", command=self.send)
         send_button.pack(pady=10)
 
-        scrollbar = Scrollbar(self.ui)
+        # Logging
 
-        self.logStringVar = tk.StringVar()
-        self.logUI = tk.Label(self.ui, justify="left", textvariable=self.logStringVar)
-        self.logUI.pack(pady=10)
+        self.logUI = st.ScrolledText(self.ui)
+        self.logUI.pack()
+        
 
 
     def chooseFolder(self):
@@ -83,11 +85,11 @@ class App():
 
     def send(self):
 
-        self.log.wipeLog()
+        self.log.wipe()
 
         toSend = os.listdir(self.fileDirectory)
 
-        self.log.updateLog("Files to be sent: " + str(toSend))
+        self.log.write("Files to be sent: " + str(toSend))
         
         for printer in self.printers:
 
@@ -97,33 +99,33 @@ class App():
                 
                 if printer.connected:
 
-                    self.log.updateLog("Connected to " + printer.name)
+                    self.log.write("Connected to " + printer.name)
 
                     for filename in toSend:
                         try:
                             with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                                self.log.updateLog("Sending " + str(filename) + " to printer " + printer.name + "..." )
+                                self.log.write("Sending " + str(filename) + " to printer " + printer.name + "..." )
                                 printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
-                                self.log.updateLog("Success")
+                                self.log.write("Success")
 
                         except:
                             try:
                                 with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                                    self.log.updateLog("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
+                                    self.log.write("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
                                     printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
-                                    self.log.updateLog("Success")
+                                    self.log.write("Success")
                             except:
-                                self.log.updateLog("Failure")
+                                self.log.write("Failure")
 
                     printer.disconnect()
 
                 else:
-                    self.log.updateLog("Could not connect to " + printer.name)
+                    self.log.write("Could not connect to " + printer.name)
             
             else:
-                self.log.updateLog("Skipping " + printer.name)
+                self.log.write("Skipping " + printer.name)
 
-        self.log.updateLog("Process Complete!")
+        self.log.write("Process Complete!")
 
 
 if __name__ == "__main__":

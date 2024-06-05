@@ -1,18 +1,15 @@
+import tkinter as tk
+import logging
 
-class Log():
-    def __init__(self, logUI, logStringVar):
-        self.logStringVar = logStringVar
+class Logger():
+    """This class allows you to log to a Tkinter Text or ScrolledText widget"""
+
+    def __init__(self, logUI):
         self.logUI = logUI
 
-        self.logText = "Log:\n"
-        self.logStringVar.set(self.logText)
+    def write(self, message):
+        self.logUI.insert(tk.INSERT, message + "\n")
+        self.logUI.see("end")
 
-    def updateLog(self, text):
-        self.logText = self.logText + text + "\n"
-        self.logStringVar.set(self.logText)
-        self.logUI.update()
-
-    def wipeLog(self):
-        self.logText = "Log:\n"
-        self.logStringVar.set(self.logText)
-        self.logUI.update()
+    def wipe(self):
+        pass
