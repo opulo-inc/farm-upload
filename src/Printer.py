@@ -10,7 +10,7 @@ class Printer():
         self.connected = False
 
         self.ftp = BambuFTP()
-        #self.ftp.set_debuglevel(2)
+        self.ftp.set_debuglevel(2)
         self.ftp.set_pasv(True)
 
 

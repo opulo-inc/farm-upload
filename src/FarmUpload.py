@@ -104,14 +104,14 @@ class App():
                         try:
                             with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
                                 self.log.write("Sending " + str(filename) + " to printer " + printer.name + "..." )
-                                printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                                printer.ftp.storbinary(f'STOR {filename}', file)
                                 self.log.write("Success")
 
                         except:
                             try:
                                 with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
                                     self.log.write("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                                    printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                                    printer.ftp.storbinary(f'STOR {filename}', file)
                                     self.log.write("Success")
                             except:
                                 self.log.write("Failure")
