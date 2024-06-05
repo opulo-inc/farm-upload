@@ -1,8 +1,9 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, Scrollbar
 import json, os
 
-from BambuFTP import BambuFTP
+from Printer import Printer
+from Log import Log
 
 class App():
     def __init__(self):
@@ -11,21 +12,34 @@ class App():
         self.fileDirectory = ""
 
         self.ui = tk.Tk()
-
-        self.logText = "Log:\n"
-        self.logStringVar = tk.StringVar()
-        self.logStringVar.set(self.logText)
-        
-        #self.loadSettings()
         self.loadUI()
+
+        self.log = Log(self.logUI, self.logStringVar)
+
+        self.ui.mainloop()
 
     def loadSettings(self):
 
         settingsDirectory = filedialog.askopenfilename()
-        self.s.config(text=settingsDirectory)
+        self.s.config(text=os.path.basename(settingsDirectory))
         f = open(settingsDirectory)
         self.settings = json.load(f)
         f.close()
+
+        # loading printers into app printer array
+
+        for printer in self.settings["printers"]:
+            var = tk.BooleanVar()
+            self.printers.append(Printer(
+                name = printer["name"],
+                ip = printer["ip"],
+                pw = printer["pw"],
+                enabled = var
+            ))
+
+            checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
+            checkbox.pack(pady=10)
+
         self.s.update_idletasks()
 
     def loadUI(self):
@@ -46,89 +60,70 @@ class App():
         self.v = tk.Label(self.ui, text='No directory selected')
         self.v.pack(pady=10)
 
+        select_printers = tk.Label(self.ui, text="Select which printers to send to:")
+        select_printers.pack(pady=10)
+
+        self.printerSelectFrame = tk.Frame(master=self.ui, highlightbackground="black", highlightthickness=1)
+        self.printerSelectFrame.pack()
+
         send_button = tk.Button(self.ui, text="Send to Farm", command=self.send)
         send_button.pack(pady=10)
 
-        self.log = tk.Label(self.ui, justify="left", textvariable=self.logStringVar)
-        self.log.pack(pady=10)
+        scrollbar = Scrollbar(self.ui)
 
-        self.ui.mainloop()
-
-    def updateLog(self, text):
-        self.logText = self.logText + text + "\n"
-        self.logStringVar.set(self.logText)
-        self.log.update()
-
-    def wipeLog(self):
-        self.logText = "Log:\n"
-        self.logStringVar.set(self.logText)
-        self.log.update()
+        self.logStringVar = tk.StringVar()
+        self.logUI = tk.Label(self.ui, justify="left", textvariable=self.logStringVar)
+        self.logUI.pack(pady=10)
 
 
     def chooseFolder(self):
         self.fileDirectory = filedialog.askdirectory()
-        self.v.config(text=self.fileDirectory)
+        self.v.config(text=os.path.basename(self.fileDirectory))
         self.v.update_idletasks()
-
-    def connect(self, printerJSON):
-        try:
-            ftp = BambuFTP()
-            ftp.set_debuglevel(2)
-            ftp.set_pasv(True)
-            ftp.connect(host=printerJSON["ip"], port=990, timeout=10, source_address=None)
-            ftp.login('bblp', printerJSON["pw"])
-            ftp.prot_p()
-            self.printers.append([printerJSON["name"], ftp])
-            self.updateLog("Connected to " + printerJSON["name"])
-            return ftp
-        except:
-            self.updateLog("Was unable to connect to " + printerJSON["name"])
-            return None
-
-    def disconnect(self, ftp, name):
-        try:
-            ftp.quit()
-            self.updateLog("Disconnected from " + str(name))
-        except:
-            self.updateLog("Was unable to disconnect from " + str(name))
 
     def send(self):
 
-        self.wipeLog()
+        self.log.wipeLog()
 
         toSend = os.listdir(self.fileDirectory)
 
-        self.updateLog("Files to be sent: " + str(toSend))
+        self.log.updateLog("Files to be sent: " + str(toSend))
         
-        for printer in self.settings["printers"]:
+        for printer in self.printers:
 
-            ftp = self.connect(printer)
-            
-            if ftp is not None:
+            if printer.enabled.get():
 
-                for filename in toSend:
-                    try:
-                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                            self.updateLog("Sending " + str(filename) + " to printer " + printer["name"] + "..." )
-                            ftp.storbinary(f'STOR {filename}', file, callback=self.update)
-                            self.updateLog("Success")
+                printer.connect()
+                
+                if printer.connected:
 
-                    except:
+                    self.log.updateLog("Connected to " + printer.name)
+
+                    for filename in toSend:
                         try:
                             with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                                self.updateLog("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                                ftp.storbinary(f'STOR {filename}', file, callback=self.update)
-                                self.updateLog("Success")
+                                self.log.updateLog("Sending " + str(filename) + " to printer " + printer.name + "..." )
+                                printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                                self.log.updateLog("Success")
+
                         except:
-                            self.updateLog("Failure")
+                            try:
+                                with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                                    self.log.updateLog("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
+                                    printer.ftp.storbinary(f'STOR {filename}', file, callback=self.update)
+                                    self.log.updateLog("Success")
+                            except:
+                                self.log.updateLog("Failure")
 
-                self.disconnect(ftp, printer["name"])
+                    printer.disconnect()
 
-        self.updateLog("Process Complete.")
+                else:
+                    self.log.updateLog("Could not connect to " + printer.name)
+            
+            else:
+                self.log.updateLog("Skipping " + printer.name)
 
-
-    def update(self, block):
-        print(str(block))
+        self.log.updateLog("Process Complete!")
 
 
 if __name__ == "__main__":
