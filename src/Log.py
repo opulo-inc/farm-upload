@@ -12,4 +12,4 @@ class Logger():
         self.logUI.see("end")
 
     def wipe(self):
-        pass
+        self.logUI.delete('1.0', tk.END)

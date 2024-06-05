@@ -56,17 +56,17 @@ class App():
         self.s = tk.Label(self.ui, text='No settings file selected')
         self.s.pack(pady=10, padx=10)
 
-        choose_folder_button = tk.Button(self.ui, text="Choose Folder to Upload", command=self.chooseFolder)
-        choose_folder_button.pack(pady=10, padx=10)
-
-        self.v = tk.Label(self.ui, text='No directory selected')
-        self.v.pack(pady=10)
-
         select_printers = tk.Label(self.ui, text="Select which printers to send to:")
         select_printers.pack(pady=10)
 
         self.printerSelectFrame = tk.Frame(master=self.ui, highlightbackground="black", highlightthickness=1)
         self.printerSelectFrame.pack()
+
+        choose_folder_button = tk.Button(self.ui, text="Choose Folder to Upload", command=self.chooseFolder)
+        choose_folder_button.pack(pady=10, padx=10)
+
+        self.v = tk.Label(self.ui, text='No directory selected')
+        self.v.pack(pady=10)        
 
         send_button = tk.Button(self.ui, text="Send to Farm", command=self.send)
         send_button.pack(pady=10)
@@ -76,7 +76,6 @@ class App():
         self.logUI = st.ScrolledText(self.ui)
         self.logUI.pack()
         
-
 
     def chooseFolder(self):
         self.fileDirectory = filedialog.askdirectory()
