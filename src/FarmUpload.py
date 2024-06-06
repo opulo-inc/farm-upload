@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 import tkinter.scrolledtext as st 
 import json, os
+import threading, queue
 
 from Printer import Printer
 from Log import Logger
@@ -15,7 +16,10 @@ class App():
         self.ui = tk.Tk()
         self.loadUI()
 
+        self.logQueue = queue.Queue()
         self.log = Logger(self.logUI)
+
+        self.ui.after(50, self.processQueue)
 
         self.ui.mainloop()
 
@@ -76,11 +80,48 @@ class App():
         self.logUI = st.ScrolledText(self.ui)
         self.logUI.pack()
         
-
     def chooseFolder(self):
         self.fileDirectory = filedialog.askdirectory()
         self.v.config(text=os.path.basename(self.fileDirectory))
         self.v.update_idletasks()
+
+    def processQueue(self):
+        try:
+            msg = self.logQueue.get_nowait()
+            self.log.write(msg)
+        except queue.Empty:
+            pass
+
+    def sendOnePrinter(self, printer, toSend):
+
+        printer.connect()
+        
+        if printer.connected:
+
+            self.logQueue.put("Connected to " + str(printer.name))
+
+            for filename in toSend:
+                try:
+                    with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                        self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
+                        
+                        printer.ftp.storbinary(f'STOR {filename}', file)
+                        self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
+
+                except:
+                    try:
+                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                            self.logQueue.put("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
+                            printer.ftp.storbinary(f'STOR {filename}', file)
+                            self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
+                    except:
+                        self.logQueue.put("Failure: " + str(filename) + " to printer " + printer.name)
+
+            printer.disconnect()
+
+        else:
+            self.logQueue.put("Could not connect to " + printer.name)
+        
 
     def send(self):
 
@@ -89,41 +130,23 @@ class App():
         toSend = os.listdir(self.fileDirectory)
 
         self.log.write("Files to be sent: " + str(toSend))
-        
+
+        printerThreads = list()
+
         for printer in self.printers:
 
             if printer.enabled.get():
 
-                printer.connect()
-                
-                if printer.connected:
+                thread = threading.Thread(target=self.sendOnePrinter, args=(printer, toSend))
+                printerThreads.append(thread)
+                thread.start()
 
-                    self.log.write("Connected to " + printer.name)
-
-                    for filename in toSend:
-                        try:
-                            with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                                self.log.write("Sending " + str(filename) + " to printer " + printer.name + "..." )
-                                printer.ftp.storbinary(f'STOR {filename}', file)
-                                self.log.write("Success")
-
-                        except:
-                            try:
-                                with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                                    self.log.write("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                                    printer.ftp.storbinary(f'STOR {filename}', file)
-                                    self.log.write("Success")
-                            except:
-                                self.log.write("Failure")
-
-                    printer.disconnect()
-
-                else:
-                    self.log.write("Could not connect to " + printer.name)
-            
             else:
                 self.log.write("Skipping " + printer.name)
 
+        while any(t.is_alive() for t in printerThreads):
+            self.processQueue()
+            
         self.log.write("Process Complete!")
 
 
