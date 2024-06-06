@@ -1,10 +1,12 @@
 # FarmUpload
 
-A bulk file uploading tool for BambuLab 3D printers.
+A bulk file uploading tool for 3D printers.
 
-Modern 3D printer slicers are excellent, but lack some print farm specific features. The BambuLab P1P has an open FTP server running that allows clients to upload files. This application takes advantage of that feature to bulk upload pre-sliced gcode to every printer in a print farm.
+![](img/demo.gif)
 
-The application is a very lightweight wrapper around Python's `ftplib` module, adding support for implicit TLS required by the printers, and a tiny UI for adding a JSON of printer connection settings and selecting your folder to upload.
+Modern 3D printer slicers are excellent, but lack some print farm specific features. Some printers have an open FTP server running that allows clients to upload files. This application takes advantage of that feature to bulk upload pre-sliced gcode to every printer in a print farm. It's on the roadmap to support Moonraker and Octoprint file sending via HTTP POST requests.
+
+The application is a very lightweight wrapper around Python's `ftplib` module, adding support for implicit TLS required by BambuLab P1P printers, and a tiny UI for adding a JSON of printer connection settings and selecting your folder to upload.
 
 ## Installation
 

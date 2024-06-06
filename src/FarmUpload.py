@@ -49,7 +49,7 @@ class App():
 
     def loadUI(self):
         
-        self.ui.title("Print Farm Bulk Uploader")
+        self.ui.title("FarmUpload")
         
         w = tk.Label(self.ui, text='Select the printers to send to:')
         w.pack()
@@ -146,6 +146,7 @@ class App():
 
         while any(t.is_alive() for t in printerThreads):
             self.processQueue()
+            # keeps ui from hanging
             self.ui.update()
 
         self.processQueue()
