@@ -146,8 +146,13 @@ class App():
 
         while any(t.is_alive() for t in printerThreads):
             self.processQueue()
+            self.ui.update()
+
+        self.processQueue()
             
-        self.log.write("Process Complete!")
+        self.logQueue.put("Process Complete!")
+
+        self.processQueue()
 
 
 if __name__ == "__main__":
