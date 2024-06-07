@@ -9,7 +9,7 @@ from setuptools import setup
 
 APP = ['src/FarmUpload.py']
 DATA_FILES = []
-OPTIONS = {'iconfile': '/Users/stephen/farm-bulk-upload/src/icon.icns'}
+OPTIONS = {'iconfile': '/Users/stephen/farm-upload/src/icon.icns'}
 
 setup(
     app=APP,
