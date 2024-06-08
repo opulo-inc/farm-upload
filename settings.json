@@ -1,9 +1,0 @@
-{
-  "printers": [
-    {
-      "name": "Printer #2",
-      "ip": "192.168.178.52",
-      "type": "Klipper"
-    }
-  ]
-}
