@@ -1,0 +1,50 @@
+name: Build Executable Files
+on:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*.*.*"
+jobs:
+  build:
+    continue-on-error: true
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Git Repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "^3.9"
+
+      - name: Image Conversion Package
+        run: python -m pip install imageio
+      - name: Build Executable
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: src/FarmUpload.py
+          onefile: true
+          enable-plugins: tk-inter
+          macos-create-app-bundle: true
+          macos-app-icon: src/icon.icns
+          windows-icon-from-ico: img/icon.png
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            build/*.exe
+            build/*.bin
+            build/*.app/**/*
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }} Build
+          path: |
+            build/*.exe
+            build/*.bin
+            build/*.app/**/*
