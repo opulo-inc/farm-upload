@@ -17,10 +17,17 @@
         {
             "name": "Printer #3",
             "type": "Octoprint",
-            "ip": "127.0.0.1",
-            "port": "8080",
+            "ip": "192.168.1.3",
+            "port": "80",
             "api_key": "XXXXXXXXXXXXXX",
             "location": "local"
+        },
+        {
+            "name": "Printer #4",
+            "type": "Prusa",
+            "ip": "192.168.1.4",
+            "port": "80",
+            "api_key": "XXXXXXXXXXXXXX"
         }
     ]
 }

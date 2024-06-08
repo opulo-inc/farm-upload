@@ -69,9 +69,20 @@ Hit "Send to Farm" to upload all files in the folder to your print farm. The log
     "name": "XXXXX",
     "type": "Octoprint",
     "ip": "XXX.XXX.XXX.XXX",
-    "port": "XXX",
+    "port": "80",
     "api_key": "XXXXXXXXXXXXXX",
     "location": "local/sdcard"
+}
+```
+
+### Prusa (Mini, MK4, XL)
+```json
+{
+    "name": "XXXXX",
+    "type": "Prusa",
+    "ip": "XXX.XXX.XXX.XXX",
+    "port": "80",
+    "api_key": "XXXXXXXXXXXXXX"
 }
 ```
 

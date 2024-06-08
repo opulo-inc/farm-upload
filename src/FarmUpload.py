@@ -38,10 +38,14 @@ class App():
         for printer_conf in self.settings["printers"]:
             enabled = tk.BooleanVar()
             printer_conf["enabled"] = enabled
-            PrinterClass = getattr(PrinterType, printer_conf.get("type"))
+
+            try:
+                PrinterClass = getattr(PrinterType, printer_conf.get("type"))
+            except AttributeError:
+                self.log.write("Printer type unknown: " + printer_conf.get("type"))
+                continue
 
             self.printers.append(PrinterClass(printer_conf))
-
             checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer_conf.get("name"), variable=enabled, onvalue=True, offvalue=False)
             checkbox.pack(side=tk.LEFT, pady=10)
 
