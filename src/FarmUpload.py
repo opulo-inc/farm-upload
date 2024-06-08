@@ -4,7 +4,7 @@ import tkinter.scrolledtext as st
 import json, os
 import threading, queue
 
-from Printer import Printer
+from Printer import BambuPrinter, KlipperPrinter
 from Log import Logger
 
 class App():
@@ -35,12 +35,21 @@ class App():
 
         for printer in self.settings["printers"]:
             var = tk.BooleanVar()
-            self.printers.append(Printer(
-                name = printer["name"],
-                ip = printer["ip"],
-                pw = printer["pw"],
-                enabled = var
-            ))
+            # switch for printer["type"]
+            if printer["type"] == "Bambu":
+                self.printers.append(BambuPrinter(
+                    name = printer["name"],
+                    ip = printer["ip"],
+                    pw = printer["pw"],
+                    enabled = var
+                ))
+            if printer["type"] == "Klipper":
+                self.printers.append(KlipperPrinter(
+                    name = printer["name"],
+                    ip = printer["ip"],
+                    enabled = var
+                ))
+
 
             checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
             checkbox.pack(side=tk.LEFT, pady=10)
@@ -105,14 +114,15 @@ class App():
                     with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
                         self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
                         
-                        printer.ftp.storbinary(f'STOR {filename}', file)
+                        printer.upload(file, filename)
+                        
                         self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
 
                 except:
                     try:
                         with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
                             self.logQueue.put("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                            printer.ftp.storbinary(f'STOR {filename}', file)
+                            printer.upload(file, filename)
                             self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
                     except:
                         self.logQueue.put("Failure: " + str(filename) + " to printer " + printer.name)
