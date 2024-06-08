@@ -7,10 +7,13 @@ import threading, queue
 from Printer import Printer
 from Log import Logger
 
+from typing import List
+
+
 class App():
     def __init__(self):
         self.settings = None
-        self.printers = []
+        self.printers: List[Printer] = []
         self.fileDirectory = ""
 
         self.ui = tk.Tk()
@@ -33,6 +36,9 @@ class App():
 
         # loading printers into app printer array
 
+        self.selectAllBtn = tk.Button(self.printerSelectFrame, text="Select All", command=self.selectAll)
+        self.selectAllBtn.pack(side=tk.LEFT, pady=10)
+
         for printer in self.settings["printers"]:
             var = tk.BooleanVar()
             self.printers.append(Printer(
@@ -46,6 +52,17 @@ class App():
             checkbox.pack(side=tk.LEFT, pady=10)
 
         self.s.update_idletasks()
+
+    def selectAll(self):
+        val: bool = True
+        if self.selectAllBtn['text'] == "Select All":
+            self.selectAllBtn['text'] = "Deselect All"
+        else:
+            self.selectAllBtn['text'] = "Select All"
+            val = False
+
+        for printer in self.printers:
+            printer.enabled.set(val)
 
     def loadUI(self):
         
@@ -92,7 +109,7 @@ class App():
         except queue.Empty:
             pass
 
-    def sendOnePrinter(self, printer, toSend):
+    def sendOnePrinter(self, printer: Printer, toSend: List[str]):
 
         printer.connect()
         
@@ -131,7 +148,7 @@ class App():
 
         self.log.write("Files to be sent: " + str(toSend))
 
-        printerThreads = list()
+        printerThreads: List[threading.Thread] = list()
 
         for printer in self.printers:
 
