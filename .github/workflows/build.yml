@@ -19,8 +19,8 @@ jobs:
         with:
           nuitka-version: main
           script-name: src/FarmUpload.py
-          one-file: true
-          enable-plugin: tk-inter
+          onefile: true
+          enable-plugins: tk-inter
           macos-create-app-bundle: true
           macos-app-icon: img/icon.png
           windows-icon-from-ico: img/icon.png
