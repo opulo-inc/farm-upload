@@ -88,6 +88,7 @@ class Main(CTk.CTkFrame):
         files = glob.glob(os.path.join(self.app.selected_folder, '*.3mf'))
         self.app.selected_folder_files = {item: True for item in files}
         self.file_list.update()
+        self.title_folder.configure(text=f"Folder: {os.path.basename(self.app.settings_path)}")
 
     def selectGroup(self, value):
         if value == "*Don't use Groups":
@@ -107,14 +108,18 @@ class Main(CTk.CTkFrame):
 
 
     def sendToPrinters(self):
-        print(self.app.printers_selected, self.app.selected_folder_files)
         self.logger.wipe()
 
         files = self.app.selected_folder_files
+        printers_selected = self.app.printers_selected
+
         to_send = [os.path.basename(key) for key in files if files[key]]
+        printer_names = [key for key in printers_selected if [key]]
+
+        self.logger.write(f"Printers selected: {printer_names}\nFiles selected: {to_send}")
         printerThreads = list()
 
-        for _, printer in self.app.printers_selected.items():
+        for _, printer in printers_selected.items():
             thread = threading.Thread(target=self.sendOnePrinter, args=(printer, to_send))
             printerThreads.append(thread)
             thread.start()
