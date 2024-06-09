@@ -11,6 +11,7 @@ class App():
     def __init__(self):
         self.settings = None
         self.printers = []
+        self.printerGroups = []
         self.fileDirectory = ""
 
         self.ui = tk.Tk()
@@ -39,13 +40,26 @@ class App():
                 name = printer["name"],
                 ip = printer["ip"],
                 pw = printer["pw"],
-                enabled = var
+                enabled = var,
+                group=printer["group"]
             ))
 
             checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
             checkbox.pack(side=tk.LEFT, pady=10)
 
+            if printer["group"] not in self.printerGroups:
+                self.printerGroups.append(printer["group"])
+        
+        for group in self.printerGroups:
+            var = tk.BooleanVar()
+            groupCheckbox = tk.Checkbutton(self.printerGroupSelectFrame, text=group, variable=var, onvalue=True, offvalue=False, command=lambda g=group, v=var: self.selectGroup(g, v))
+            groupCheckbox.pack(side=tk.LEFT, pady=10)
+
         self.s.update_idletasks()
+
+    def selectGroup(self, group, var):
+        for printer in [p for p in self.printers if p.group == group]:
+            printer.enabled.set(var.get())
 
     def loadUI(self):
         
@@ -62,6 +76,9 @@ class App():
 
         select_printers = tk.Label(self.ui, text="Select which printers to send to:")
         select_printers.pack(pady=10)
+
+        self.printerGroupSelectFrame = tk.Frame(master=self.ui, highlightbackground="black", highlightthickness=1)
+        self.printerGroupSelectFrame.pack()
 
         self.printerSelectFrame = tk.Frame(master=self.ui, highlightbackground="black", highlightthickness=1)
         self.printerSelectFrame.pack()

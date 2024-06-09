@@ -2,11 +2,13 @@
     "printers": [
         {
             "name": "Printer #1",
+            "group": "A",
             "ip": "192.168.1.1",
             "pw": "12345678"
         },
         {
             "name": "Printer #2",
+            "group": "B",
             "ip": "192.168.1.2",
             "pw": "12345678"
         }
