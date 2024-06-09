@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import filedialog
 import tkinter.scrolledtext as st 
-import json, os
-import threading, queue
+import json
+import os
+import threading
+import queue
 
-from Printer import Printer
+import PrinterType
 from Log import Logger
 
 class App():
@@ -33,16 +35,18 @@ class App():
 
         # loading printers into app printer array
 
-        for printer in self.settings["printers"]:
-            var = tk.BooleanVar()
-            self.printers.append(Printer(
-                name = printer["name"],
-                ip = printer["ip"],
-                pw = printer["pw"],
-                enabled = var
-            ))
+        for printer_conf in self.settings["printers"]:
+            enabled = tk.BooleanVar()
+            printer_conf["enabled"] = enabled
 
-            checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
+            try:
+                PrinterClass = getattr(PrinterType, printer_conf.get("type"))
+            except AttributeError:
+                self.log.write("Printer type unknown: " + printer_conf.get("type"))
+                continue
+
+            self.printers.append(PrinterClass(printer_conf))
+            checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer_conf.get("name"), variable=enabled, onvalue=True, offvalue=False)
             checkbox.pack(side=tk.LEFT, pady=10)
 
         self.s.update_idletasks()
@@ -101,22 +105,14 @@ class App():
             self.logQueue.put("Connected to " + str(printer.name))
 
             for filename in toSend:
-                try:
-                    with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                        self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
-                        
-                        printer.ftp.storbinary(f'STOR {filename}', file)
+                with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
+                    self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
+
+                    return_status = printer.send(filename, file, self.logQueue)
+                    if return_status:
                         self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
-
-                except:
-                    try:
-                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                            self.logQueue.put("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                            printer.ftp.storbinary(f'STOR {filename}', file)
-                            self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
-                    except:
+                    else:
                         self.logQueue.put("Failure: " + str(filename) + " to printer " + printer.name)
-
             printer.disconnect()
 
         else:

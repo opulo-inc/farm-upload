@@ -5,13 +5,15 @@ It is based heavily off of the extension made by tfboy: https://python-forum.io/
 """
 
 import ftplib
-import ssl, os
+import ssl
 
-class Error(Exception): pass
 CRLF = '\r\n'
 B_CRLF = b'\r\n'
 
 _SSLSocket = ssl.SSLSocket
+
+class Error(Exception): 
+    pass
 
 # ftps = FTP('192.168.1.204', 990)
 # ftps.debugging = 2
