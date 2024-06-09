@@ -1,160 +1,57 @@
-import tkinter as tk
-from tkinter import filedialog
-import tkinter.scrolledtext as st 
-import json, os
-import threading, queue
+import customtkinter as CTk
+from typing import Literal
+from gui.SelectSettings import SelectSettings
+from gui.Main import Main
 
-from Printer import Printer
-from Log import Logger
+class App(CTk.CTk):
 
-class App():
+    ## design GUI (https://excalidraw.com/#json=_gYLOEMIdrXcCb3VUiZ8-,gJ0XoeU5ao8QGx4KIrMM5Q)
+
     def __init__(self):
-        self.settings = None
-        self.printers = []
-        self.fileDirectory = ""
+        super().__init__()
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.title("Farm Upload")
+        self._current_window = ""
 
-        self.ui = tk.Tk()
-        self.loadUI()
+        self.main_window = None
+        self.printers: dict = {}
+        self.printers_selected: dict = {}
+        self.settings_path: str = None
+        self.settings: dict = None
+        self.selected_folder: str = None
+        self.selected_folder_files: dict = {}
 
-        self.logQueue = queue.Queue()
-        self.log = Logger(self.logUI)
+        self.changeWindow("SelectSettings")
 
-        self.ui.after(50, self.processQueue)
 
-        self.ui.mainloop()
+    def changeWindow(self, window_name: Literal["SelectSettings", "Main"]): # find better name to 'main'
+        """Select what page to show to the user.
 
-    def loadSettings(self):
+        Args:
+            window_name (str): page to open
 
-        settingsDirectory = filedialog.askopenfilename()
-        self.s.config(text=os.path.basename(settingsDirectory))
-        f = open(settingsDirectory)
-        self.settings = json.load(f)
-        f.close()
+        Raises:
+            NotImplementedError: if the page is not implemented
+        """
+        if self.main_window:
+            self.main_window.destroy()
 
-        # loading printers into app printer array
+        if window_name == "SelectSettings":
+            self.main_window = SelectSettings(self)
+            self.main_window.grid(row=0, column=0, padx=25, pady=(12, 25), sticky="nsew")
 
-        for printer in self.settings["printers"]:
-            var = tk.BooleanVar()
-            self.printers.append(Printer(
-                name = printer["name"],
-                ip = printer["ip"],
-                pw = printer["pw"],
-                enabled = var
-            ))
+        elif window_name == "Main":
 
-            checkbox = tk.Checkbutton(self.printerSelectFrame, text=printer["name"], variable=var, onvalue=True, offvalue=False)
-            checkbox.pack(side=tk.LEFT, pady=10)
-
-        self.s.update_idletasks()
-
-    def loadUI(self):
-        
-        self.ui.title("FarmUpload")
-        
-        w = tk.Label(self.ui, text='Select the printers to send to:')
-        w.pack()
-
-        choose_settings_button = tk.Button(self.ui, text="Choose Settings JSON File", command=self.loadSettings)
-        choose_settings_button.pack(pady=10, padx=10)
-
-        self.s = tk.Label(self.ui, text='No settings file selected')
-        self.s.pack(pady=10, padx=10)
-
-        select_printers = tk.Label(self.ui, text="Select which printers to send to:")
-        select_printers.pack(pady=10)
-
-        self.printerSelectFrame = tk.Frame(master=self.ui, highlightbackground="black", highlightthickness=1)
-        self.printerSelectFrame.pack()
-
-        choose_folder_button = tk.Button(self.ui, text="Choose Folder to Upload", command=self.chooseFolder)
-        choose_folder_button.pack(pady=10, padx=10)
-
-        self.v = tk.Label(self.ui, text='No directory selected')
-        self.v.pack(pady=10)        
-
-        send_button = tk.Button(self.ui, text="Send to Farm", command=self.send)
-        send_button.pack(pady=10)
-
-        # Logging
-
-        self.logUI = st.ScrolledText(self.ui)
-        self.logUI.pack()
-        
-    def chooseFolder(self):
-        self.fileDirectory = filedialog.askdirectory()
-        self.v.config(text=os.path.basename(self.fileDirectory))
-        self.v.update_idletasks()
-
-    def processQueue(self):
-        try:
-            msg = self.logQueue.get_nowait()
-            self.log.write(msg)
-        except queue.Empty:
-            pass
-
-    def sendOnePrinter(self, printer, toSend):
-
-        printer.connect()
-        
-        if printer.connected:
-
-            self.logQueue.put("Connected to " + str(printer.name))
-
-            for filename in toSend:
-                try:
-                    with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                        self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
-                        
-                        printer.ftp.storbinary(f'STOR {filename}', file)
-                        self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
-
-                except:
-                    try:
-                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                            self.logQueue.put("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
-                            printer.ftp.storbinary(f'STOR {filename}', file)
-                            self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
-                    except:
-                        self.logQueue.put("Failure: " + str(filename) + " to printer " + printer.name)
-
-            printer.disconnect()
+            self.main_window = Main(self)
+            self.main_window.grid(row=0, column=0, padx=25, pady=(12, 25), sticky="nsew")
+            self._current_window = window_name
 
         else:
-            self.logQueue.put("Could not connect to " + printer.name)
-        
-
-    def send(self):
-
-        self.log.wipe()
-
-        toSend = os.listdir(self.fileDirectory)
-
-        self.log.write("Files to be sent: " + str(toSend))
-
-        printerThreads = list()
-
-        for printer in self.printers:
-
-            if printer.enabled.get():
-
-                thread = threading.Thread(target=self.sendOnePrinter, args=(printer, toSend))
-                printerThreads.append(thread)
-                thread.start()
-
-            else:
-                self.log.write("Skipping " + printer.name)
-
-        while any(t.is_alive() for t in printerThreads):
-            self.processQueue()
-            # keeps ui from hanging
-            self.ui.update()
-
-        self.processQueue()
-            
-        self.logQueue.put("Process Complete!")
-
-        self.processQueue()
+            raise NotImplementedError(f"{window_name} window does not exist")
 
 
 if __name__ == "__main__":
     app = App()
+
+    app.mainloop()

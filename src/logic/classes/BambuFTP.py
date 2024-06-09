@@ -5,7 +5,7 @@ It is based heavily off of the extension made by tfboy: https://python-forum.io/
 """
 
 import ftplib
-import ssl, os
+import ssl
 
 class Error(Exception): pass
 CRLF = '\r\n'
@@ -26,12 +26,12 @@ class BambuFTP(ftplib.FTP_TLS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._sock = None
- 
+
     @property
     def sock(self):
         """Return the socket."""
         return self._sock
- 
+
     @sock.setter
     def sock(self, value):
         """When modifying the socket, ensure that it is ssl wrapped."""
@@ -69,7 +69,7 @@ class BambuFTP(ftplib.FTP_TLS):
             # if _SSLSocket is not None and isinstance(conn, _SSLSocket):
             #     conn.unwrap()
         return self.voidresp()
- 
+
     def storbinary(self, cmd, fp, blocksize=8192, callback=None, rest=None):
         """Store a file in binary mode.  A new port is created for you.
 
