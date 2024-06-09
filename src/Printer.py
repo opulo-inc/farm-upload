@@ -2,8 +2,9 @@
 from BambuFTP import BambuFTP
 
 class Printer():
-    def __init__(self, name, ip, pw, enabled):
+    def __init__(self, name, ip, pw, enabled, group):
         self.name = name;
+        self.group = group;
         self.ip = ip;
         self.pw = pw;
         self.enabled = enabled
