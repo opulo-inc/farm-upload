@@ -1,29 +1,39 @@
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import filedialog
-import tkinter.scrolledtext as st 
+from tkinter.scrolledtext import ScrolledText
+from typing import TypedDict
 import json, os
 import threading, queue
 
 from Printer import Printer
 from Log import Logger
 
-class App():
-    def __init__(self):
-        self.settings = None
-        self.printers = []
+
+class PrinterSetting(TypedDict):
+    name: str
+    ip: str
+    pw: str
+
+
+class App:
+    def __init__(self) -> None:
+        self.settings: dict[str, list[PrinterSetting]] = {}
+        self.printers: list[Printer] = []
         self.fileDirectory = ""
 
         self.ui = tk.Tk()
         self.loadUI()
 
-        self.logQueue = queue.Queue()
+        self.logQueue: queue.Queue[str] = queue.Queue()
         self.log = Logger(self.logUI)
 
         self.ui.after(50, self.processQueue)
 
         self.ui.mainloop()
 
-    def loadSettings(self):
+    def loadSettings(self) -> None:
 
         settingsDirectory = filedialog.askopenfilename()
         self.s.config(text=os.path.basename(settingsDirectory))
@@ -47,10 +57,10 @@ class App():
 
         self.s.update_idletasks()
 
-    def loadUI(self):
-        
+    def loadUI(self) -> None:
+
         self.ui.title("FarmUpload")
-        
+
         w = tk.Label(self.ui, text='Select the printers to send to:')
         w.pack()
 
@@ -70,68 +80,62 @@ class App():
         choose_folder_button.pack(pady=10, padx=10)
 
         self.v = tk.Label(self.ui, text='No directory selected')
-        self.v.pack(pady=10)        
+        self.v.pack(pady=10)
 
         send_button = tk.Button(self.ui, text="Send to Farm", command=self.send)
         send_button.pack(pady=10)
 
         # Logging
 
-        self.logUI = st.ScrolledText(self.ui)
+        self.logUI = ScrolledText(self.ui)
         self.logUI.pack()
-        
-    def chooseFolder(self):
+
+    def chooseFolder(self) -> None:
         self.fileDirectory = filedialog.askdirectory()
         self.v.config(text=os.path.basename(self.fileDirectory))
         self.v.update_idletasks()
 
-    def processQueue(self):
+    def processQueue(self) -> None:
         try:
             msg = self.logQueue.get_nowait()
             self.log.write(msg)
         except queue.Empty:
             pass
 
-    def sendOnePrinter(self, printer, toSend):
+    def sendOnePrinter(self, printer: Printer, toSend: list[str]) -> None:
 
-        printer.connect()
-        
-        if printer.connected:
-
-            self.logQueue.put("Connected to " + str(printer.name))
+        with printer:
+            if not printer.connected:
+                self.logQueue.put(f"Could not connect to {printer.name}")
+                return
+            self.logQueue.put(f"Connected to {printer.name}")
 
             for filename in toSend:
                 try:
-                    with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                        self.logQueue.put("Sending " + str(filename) + " to printer " + printer.name + "..." )
-                        
+                    with open(os.path.join(self.fileDirectory, filename), 'rb') as file:
+                        self.logQueue.put(f"Sending {filename} to printer {printer.name}..." )
+
                         printer.ftp.storbinary(f'STOR {filename}', file)
-                        self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
+                        self.logQueue.put(f"Success: {filename} to printer {printer.name}")
 
                 except:
                     try:
-                        with open(os.path.join(self.fileDirectory,filename), 'rb') as file:
-                            self.logQueue.put("Reattempting to send " + str(filename) + " to printer " + printer["name"] + "..." )
+                        with open(os.path.join(self.fileDirectory, filename), 'rb') as file:
+                            self.logQueue.put(f"Reattempting to send {filename} to printer {printer.name}...")
                             printer.ftp.storbinary(f'STOR {filename}', file)
-                            self.logQueue.put("Success: " + str(filename) + " to printer " + printer.name)
-                    except:
-                        self.logQueue.put("Failure: " + str(filename) + " to printer " + printer.name)
+                            self.logQueue.put(f"Success: {filename} to printer {printer.name}")
+                    except Exception:
+                        self.logQueue.put(f"Failure: {filename} to printer {printer.name}")
 
-            printer.disconnect()
-
-        else:
-            self.logQueue.put("Could not connect to " + printer.name)
-        
-
-    def send(self):
+    def send(self) -> None:
 
         self.log.wipe()
 
         toSend = os.listdir(self.fileDirectory)
 
-        self.log.write("Files to be sent: " + str(toSend))
+        self.log.write(f"Files to be sent: {toSend}")
 
-        printerThreads = list()
+        printerThreads = []
 
         for printer in self.printers:
 
@@ -142,7 +146,7 @@ class App():
                 thread.start()
 
             else:
-                self.log.write("Skipping " + printer.name)
+                self.log.write(f"Skipping {printer.name}")
 
         while any(t.is_alive() for t in printerThreads):
             self.processQueue()
@@ -150,7 +154,7 @@ class App():
             self.ui.update()
 
         self.processQueue()
-            
+
         self.logQueue.put("Process Complete!")
 
         self.processQueue()
