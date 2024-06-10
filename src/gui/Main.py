@@ -76,6 +76,7 @@ class Main(CTk.CTkFrame):
         result = []
         if self.app.printers:
             for name, printer in self.app.printers.items():
+                printer: Printer
                 if printer.group not in result:
                     result.append(printer.group)
         return result

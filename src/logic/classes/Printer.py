@@ -1,7 +1,7 @@
 from logic.classes.BambuFTP import BambuFTP
 
 class Printer():
-    def __init__(self, name, group, ip, pw):
+    def __init__(self, name: str, group: str, ip: str, pw: str):
         self.name = name
         self.group = group
         self.ip = ip
@@ -9,7 +9,6 @@ class Printer():
         self.connected = False
 
         self.ftp = BambuFTP()
-        #self.ftp.set_debuglevel(2)
         self.ftp.set_pasv(True)
 
 

@@ -1,9 +1,9 @@
-
+import customtkinter as CTk
 
 class Logger():
     """This class allows you to log to a CTkinter ScrolledText widget"""
 
-    def __init__(self, logUI):
+    def __init__(self, logUI: CTk.CTkTextbox):
         self.logUI = logUI
 
     def write(self, message):

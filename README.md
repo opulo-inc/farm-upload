@@ -53,6 +53,6 @@ Hit "Send to Farm" to upload all files in the folder to your print farm. The log
 
 ## Todo
 
-- Test on printers other than BambuLab P1P
+- Test on printers other than BambuLab P1P and P1S
 - Support deleting existing files from the printer's SD
 - Handle uploading files that share a name with an existing file on the SD
