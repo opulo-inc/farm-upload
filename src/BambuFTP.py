@@ -4,8 +4,20 @@ This is an extension of the ftplib python module to support implicit FTPS connec
 It is based heavily off of the extension made by tfboy: https://python-forum.io/thread-39467.html
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import ftplib
 import ssl, os
+from socket import (  # type: ignore[attr-defined]
+    _GLOBAL_DEFAULT_TIMEOUT,
+    socket,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import _typeshed
 
 class Error(Exception): pass
 CRLF = '\r\n'
@@ -23,23 +35,42 @@ _SSLSocket = ssl.SSLSocket
 
 class BambuFTP(ftplib.FTP_TLS):
     """FTP_TLS subclass that automatically wraps sockets in SSL to support implicit FTPS."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._sock = None
- 
-    @property
-    def sock(self):
+    def __init__(
+        self,
+        host: str = '',
+        user: str = '',
+        passwd: str = '',
+        acct: str = '',
+        *,
+        context: ssl.SSLContext | None = None,
+        timeout: float = _GLOBAL_DEFAULT_TIMEOUT,
+        source_address: tuple[str, int] | None = None,
+        encoding: str = 'utf-8'
+    ) -> None:
+        super().__init__(host, user, passwd, acct,
+                         context=context, timeout=timeout,
+                         source_address=source_address, encoding=encoding)
+        self._sock: ssl.SSLSocket | None = None
+
+    @property  # type: ignore[override]
+    def sock(self) -> ssl.SSLSocket | None:
         """Return the socket."""
         return self._sock
- 
+
     @sock.setter
-    def sock(self, value):
+    def sock(self, value: socket | ssl.SSLSocket | None) -> None:
         """When modifying the socket, ensure that it is ssl wrapped."""
         if value is not None and not isinstance(value, ssl.SSLSocket):
-            value = self.context.wrap_socket(value)
+            self._sock = self.context.wrap_socket(value)
+            return
         self._sock = value
 
-    def storlines(self, cmd, fp, callback=None):
+    def storlines(
+        self,
+        cmd: str,
+        fp: _typeshed.SupportsReadline[bytes],
+        callback: Callable[[bytes], object] | None = None
+    ) -> str:
         """Store a file in line mode.  A new port is created for you.
 
         Args:
@@ -56,7 +87,7 @@ class BambuFTP(ftplib.FTP_TLS):
             while 1:
                 buf = fp.readline(self.maxline + 1)
                 if len(buf) > self.maxline:
-                    raise Error("got more than %d bytes" % self.maxline)
+                    raise Error(f"got more than {self.maxline} bytes")
                 if not buf:
                     break
                 if buf[-2:] != B_CRLF:
@@ -69,8 +100,15 @@ class BambuFTP(ftplib.FTP_TLS):
             # if _SSLSocket is not None and isinstance(conn, _SSLSocket):
             #     conn.unwrap()
         return self.voidresp()
- 
-    def storbinary(self, cmd, fp, blocksize=8192, callback=None, rest=None):
+
+    def storbinary(
+        self,
+        cmd: str,
+        fp: _typeshed.SupportsRead[bytes],
+        blocksize: int = 8192,
+        callback: Callable[[bytes], object] | None = None,
+        rest: int | str | None = None
+    ) -> str:
         """Store a file in binary mode.  A new port is created for you.
 
         Args:
