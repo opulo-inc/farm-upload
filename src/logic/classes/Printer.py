@@ -1,16 +1,14 @@
-
-from BambuFTP import BambuFTP
+from logic.classes.BambuFTP import BambuFTP
 
 class Printer():
-    def __init__(self, name, ip, pw, enabled):
-        self.name = name;
-        self.ip = ip;
-        self.pw = pw;
-        self.enabled = enabled
+    def __init__(self, name: str, group: str, ip: str, pw: str):
+        self.name = name
+        self.group = group
+        self.ip = ip
+        self.pw = pw
         self.connected = False
 
         self.ftp = BambuFTP()
-        #self.ftp.set_debuglevel(2)
         self.ftp.set_pasv(True)
 
 
@@ -22,7 +20,7 @@ class Printer():
             self.connected = True
         except:
             return False
-        
+
     def disconnect(self):
         try:
             self.ftp.quit()
