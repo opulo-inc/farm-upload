@@ -9,21 +9,28 @@ class FileList(CTk.CTkScrollableFrame):
         self.checkboxes = {}
 
     def update(self):
-        for checkbox in self.checkboxes:
-            checkbox.destroy()
+        for path, checkbox in self.checkboxes.items():
+            # I hate this, but its late and for now it works so I don't care.
+            try:
+                checkbox.destroy()
+            except:
+                continue
+            try:
+                del checkbox
+            except:
+                continue
+        self.checkboxes = {}
 
-        for file_path, status in self.app.selected_folder_files.items():
+        for i, file_path in enumerate(self.app.selected_files):
             file_name = os.path.basename(file_path)
             self.checkboxes[file_path] = CTk.CTkCheckBox(self, text=file_name, command=self.checkboxEvent)
-            self.checkboxes[file_path].grid(row=0, column=0, padx=5, pady=(5, 0))
-            if status:
-                self.checkboxes[file_path].select()
+            self.checkboxes[file_path].grid(row=i, column=0, padx=5, pady=(5, 0), sticky="w")
+            self.checkboxes[file_path].select()
+
+        self.master.master.master.title_files.configure(text=f"Files: {len(self.app.selected_files)}")
 
     def checkboxEvent(self):
-        new_states = {}
-        for path, checkbox in self.checkboxes.items():
-            if checkbox.get():
-                new_states[path] = True
-            else:
-                new_states[path] = False
-        self.app.selected_folder_files = new_states
+        for i, (path, checkbox) in enumerate(self.checkboxes.items()):
+            if checkbox.get() == 0:
+                self.app.selected_files.pop(i)
+        self.update()

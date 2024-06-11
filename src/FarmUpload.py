@@ -19,8 +19,7 @@ class App(CTk.CTk):
         self.printers_selected: dict = {}
         self.settings_path: str = None
         self.settings: dict = None
-        self.selected_folder: str = None
-        self.selected_folder_files: dict = {}
+        self.selected_files: list = []
 
         self.changeWindow("SelectSettings")
 

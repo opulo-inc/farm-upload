@@ -4,7 +4,7 @@ from logic.classes.Logger import Logger
 from logic.classes.Printer import Printer
 from gui.main.FileList import FileList
 from gui.main.PrinterList import PrinterList
-import os, glob, threading
+import os, threading
 
 
 class Main(CTk.CTkFrame):
@@ -27,7 +27,7 @@ class Main(CTk.CTkFrame):
         self.title_printer.grid(row=1, column=0, padx=20, pady=10, sticky="n")
 
         # printer list (selection)
-        self.printer_list = PrinterList(self)
+        self.printer_list = PrinterList(self, label_anchor="w")
         self.printer_list.grid(row=3, column=0, padx=20, pady=10, sticky="nesw")
 
         # select group (make this a pop up with ceckbox?)
@@ -44,17 +44,17 @@ class Main(CTk.CTkFrame):
         self.conferma_button = CTk.CTkButton(self, text="Send to Printers", command=self.sendToPrinters)
         self.conferma_button.grid(row=4, column=1, padx=20, pady=(10, 0), sticky="nesw")
 
-        ## FOLDERS
-        # label "folder"
-        self.title_folder = CTk.CTkLabel(self, text=f"Folder: {None}", justify="center", font=("Arial", 15))
-        self.title_folder.grid(row=1, column=1, padx=20, pady=10, sticky="n")
+        ## FILES
+        # label "files"
+        self.title_files = CTk.CTkLabel(self, text=f"Files: {len(self.app.selected_files)}", justify="center", font=("Arial", 15))
+        self.title_files.grid(row=1, column=1, padx=20, pady=10)
 
-        # button "select folder"
-        self.conferma_button = CTk.CTkButton(self, text="Select folder", command=self.selectFolder)
-        self.conferma_button.grid(row=2, column=1, padx=20, pady=(10, 0), sticky="nesw")
+        # button "select files"
+        self.select_files = CTk.CTkButton(self, text="Select files", command=self.selectFiles)
+        self.select_files.grid(row=2, column=1, padx=20, pady=(10, 0), sticky="nesw")
 
         # file list (selection)
-        self.file_list = FileList(self)
+        self.file_list = FileList(self, label_anchor="w")
         self.file_list.grid(row=3, column=1, columnspan=2, padx=20, pady=10, sticky="nesw")
 
         ## LOGS
@@ -84,12 +84,13 @@ class Main(CTk.CTkFrame):
     def manipulatePrinters(self):
         pass
 
-    def selectFolder(self):
-        self.app.selected_folder = filedialog.askdirectory()
-        files = glob.glob(os.path.join(self.app.selected_folder, '*.3mf'))
-        self.app.selected_folder_files = {item: True for item in files}
+    def selectFiles(self):
+        filetypes = [("3D Manufacturing Format files", "*.3mf")]
+        files = list(filedialog.askopenfilenames(title="Select .3mf files", filetypes=filetypes))
+        for file in files:
+            if file not in self.app.selected_files:
+                self.app.selected_files.append(file)
         self.file_list.update()
-        self.title_folder.configure(text=f"Folder: {os.path.basename(self.app.settings_path)}")
 
     def selectGroup(self, value):
         if value == "*Don't use Groups":
@@ -111,10 +112,10 @@ class Main(CTk.CTkFrame):
     def sendToPrinters(self):
         self.logger.wipe()
 
-        files = self.app.selected_folder_files
+        files = self.app.selected_files
         printers_selected = self.app.printers_selected
 
-        to_send = [os.path.basename(key) for key in files if files[key]]
+        to_send = [os.path.basename(key) for key in files]
         printer_names = [key for key in printers_selected if [key]]
 
         self.logger.write(f"Printers selected: {printer_names}\nFiles selected: {to_send}")
