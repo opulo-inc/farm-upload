@@ -51,6 +51,41 @@ Click on "Choose Folder to Upload" to select a folder where all your pre-sliced 
 
 Hit "Send to Farm" to upload all files in the folder to your print farm. The log will notify you of success or failure.
 
+## Compatible Printer
+### Bambu Lab
+```json
+{
+    "name": "XXXXX",
+    "type": "Bambu",
+    "ip": "XXX.XXX.XXX.XXX",
+    "user": "bblp",
+    "pw": "12345678"
+}
+```
+
+### Octoprint
+```json
+{
+    "name": "XXXXX",
+    "type": "Octoprint",
+    "ip": "XXX.XXX.XXX.XXX",
+    "port": "80",
+    "api_key": "XXXXXXXXXXXXXX",
+    "location": "local/sdcard"
+}
+```
+
+### Prusa (Mini, MK4, XL)
+```json
+{
+    "name": "XXXXX",
+    "type": "Prusa",
+    "ip": "XXX.XXX.XXX.XXX",
+    "port": "80",
+    "api_key": "XXXXXXXXXXXXXX"
+}
+```
+
 ## Todo
 
 - Test on printers other than BambuLab P1P

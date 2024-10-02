@@ -2,13 +2,32 @@
     "printers": [
         {
             "name": "Printer #1",
+            "type": "Bambu",
             "ip": "192.168.1.1",
+            "user": "bblp",
             "pw": "12345678"
         },
         {
             "name": "Printer #2",
+            "type": "Bambu",
             "ip": "192.168.1.2",
+            "user": "bblp",
             "pw": "12345678"
+        },
+        {
+            "name": "Printer #3",
+            "type": "Octoprint",
+            "ip": "192.168.1.3",
+            "port": "80",
+            "api_key": "XXXXXXXXXXXXXX",
+            "location": "local"
+        },
+        {
+            "name": "Printer #4",
+            "type": "Prusa",
+            "ip": "192.168.1.4",
+            "port": "80",
+            "api_key": "XXXXXXXXXXXXXX"
         }
     ]
 }

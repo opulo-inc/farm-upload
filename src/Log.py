@@ -1,5 +1,4 @@
 import tkinter as tk
-import logging
 
 class Logger():
     """This class allows you to log to a Tkinter Text or ScrolledText widget"""
