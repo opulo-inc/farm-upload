@@ -3,6 +3,7 @@ from tkinter import filedialog
 import tkinter.scrolledtext as st 
 import json
 import os
+import sys
 import threading
 import queue
 
@@ -27,7 +28,12 @@ class App():
 
     def loadSettings(self):
 
-        settingsDirectory = filedialog.askopenfilename()
+         # Open file dialog to select only JSON files
+        settingsDirectory = filedialog.askopenfilename(
+            title="Select Settings JSON File",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        
         self.s.config(text=os.path.basename(settingsDirectory))
         f = open(settingsDirectory)
         self.settings = json.load(f)
@@ -54,6 +60,18 @@ class App():
     def loadUI(self):
         
         self.ui.title("FarmUpload")
+
+        # Get the correct path to the icon file
+        if getattr(sys, 'frozen', False):  # Check if running as a PyInstaller bundle
+            base_path = sys._MEIPASS
+        else:  # Running as a script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        icon_path = os.path.join(base_path, "icon.ico")
+
+        # Set the window icon
+        if sys.platform == "win32" and os.path.exists(icon_path):
+            self.ui.iconbitmap(icon_path)
         
         w = tk.Label(self.ui, text='Select the printers to send to:')
         w.pack()

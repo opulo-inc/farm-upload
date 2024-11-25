@@ -5,15 +5,29 @@ Usage:
     python setup.py py2app
 """
 
+import sys
 from setuptools import setup
+import os
+
+# Determine the platform
+platform = sys.platform
 
 APP = ['src/FarmUpload.py']
 DATA_FILES = []
-OPTIONS = {'iconfile': '/Users/stephen/farm-upload/src/icon.icns'}
+ICON_MAC = '/Users/stephen/farm-upload/src/icon.icns'
+ICON_WIN = 'src/icon.ico'  # Add a `.ico` version of your icon for Windows
 
-setup(
-    app=APP,
-    data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
-)
+OPTIONS_MAC = {'iconfile': ICON_MAC}
+OPTIONS_WIN = {'onefile': True, 'icon': ICON_WIN}
+
+if platform == "darwin":  # macOS
+    setup(
+        app=APP,
+        data_files=DATA_FILES,
+        options={'py2app': OPTIONS_MAC},
+        setup_requires=['py2app'],
+    )
+elif platform == "win32":  # Windows
+    os.system(f'pyinstaller --onefile --icon={ICON_WIN} --noconsole {APP[0]}')
+else:
+    raise OSError("Unsupported platform. Only macOS and Windows are supported.")

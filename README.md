@@ -86,6 +86,19 @@ Hit "Send to Farm" to upload all files in the folder to your print farm. The log
 }
 ```
 
+## Source Executable Compilation
+
+### Mac
+
+`python setup.py py2app`
+
+### Windows
+
+```
+pip install pyinstaller
+pyinstaller --onefile --icon=src/icon.ico --add-data "src/icon.ico;." --noconsole src/FarmUpload.py
+```
+
 ## Todo
 
 - Test on printers other than BambuLab P1P
