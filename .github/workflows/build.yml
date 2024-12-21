@@ -1,5 +1,6 @@
 name: Build Executable Files
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
