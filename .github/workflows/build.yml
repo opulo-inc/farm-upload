@@ -28,7 +28,6 @@ jobs:
         with:
           nuitka-version: main
           script-name: src/FarmUpload.py
-          enable-plugins: tk-inter
           macos-app-icon: src/icon.icns
           windows-icon-from-ico: img/icon.png
       - name: Release
