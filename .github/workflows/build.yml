@@ -30,6 +30,7 @@ jobs:
           script-name: src/FarmUpload.py
           macos-app-icon: src/icon.icns
           windows-icon-from-ico: img/icon.png
+          mode: app
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
