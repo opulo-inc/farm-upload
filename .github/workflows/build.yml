@@ -22,7 +22,7 @@ jobs:
           python-version: "^3.9"
 
       - name: Image Conversion Package
-        run: python -m pip install imageio
+        run: python -m pip install imageio requests
       - name: Build Executable
         uses: Nuitka/Nuitka-Action@main
         with:
